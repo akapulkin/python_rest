@@ -22,7 +22,7 @@ from rest_framework_simplejwt.views import (
 )
 from django_rest import views
 from rest_framework_swagger.views import get_swagger_view
-schema_view = get_swagger_view(title="Notes API")
+schema_view = get_swagger_view(title="Projects API")
 
 
 urlpatterns = [
@@ -32,6 +32,6 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api-auth/', include('rest_framework.urls')),
-    path('', schema_view),
-    path('employee/', views.EmployeeViewAPI.as_view(), name='employee'),
+    path('', schema_view, name='swagger'),
+    path('employee/', views.EmployeeViewAPI.as_view(), name='employee')
 ]

@@ -6,17 +6,17 @@ from django.test.client import Client
 
 
 @pytest.fixture
-def get_token(client):
+def admin_client(client):
     resp = client.post(url=reverse('token_obtain_pair'), json={'username': 'vololo122', 'password': 'gavanava'})
-    return f"Bearer {json.loads(resp.text)['access']}"
+    token = f"Bearer {json.loads(resp.text)['access']}"
+    return Client(Authorization=token)
 
 
 @pytest.mark.django_db
-def test_get_employee(client):
+def test_get_employee(admin_client):
 
     body = {'username': 'vololo122'}
-    client = Client(Authorization=get_token())
-    resp = client.get(url=reverse('employee'), json=body)
+    resp = admin_client.get(url=reverse('employee'), json=body)
     assert resp.status_code == 200
 
 

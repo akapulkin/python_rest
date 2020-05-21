@@ -21,8 +21,22 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 from django_rest import views
-from rest_framework_swagger.views import get_swagger_view
-schema_view = get_swagger_view(title="Projects API")
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Django REST API",
+      default_version='v1',
+      description="Home project",
+      terms_of_service="https://www.google.com/policies/terms/",
+      contact=openapi.Contact(email="contact@snippets.local"),
+      license=openapi.License(name="BSD License"),
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),
+)
 
 
 urlpatterns = [
@@ -32,6 +46,9 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api-auth/', include('rest_framework.urls')),
-    path('', schema_view, name='swagger'),
-    path('employee/', views.EmployeeViewAPI.as_view(), name='employee')
+    path(r'', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path(r'redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('employee/', views.EmployeesViewAPI.as_view(), name='employee'),
+    path('employee/<int:pk>/', views.EmployeeGetViewAPI.as_view(), name='employee_get')
+
 ]

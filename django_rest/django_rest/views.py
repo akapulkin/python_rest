@@ -6,23 +6,40 @@ from django_rest.models import Employee
 from django.contrib.auth.models import User
 from django_rest.serializers import EmployeeGetSerializer, EmployeeSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 
-class EmployeeViewAPI(APIView):  #genericview
+class EmployeeGetViewAPI(APIView):
     permission_classes = (IsAuthenticated, IsAdminUser)
 
-    def get(self, request):
-        """
-        Return a list of Employees.
-        """
-        user = get_object_or_404(User, username=request.data['username'])
+    @swagger_auto_schema(operation_description="Create Employee.",
+                         responses={200: EmployeeGetSerializer(many=True)})
+    def get(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
         serializer = EmployeeGetSerializer(Employee.objects.get(user=user))
         return Response(serializer.data)
 
+
+class EmployeesViewAPI(APIView):
+    permission_classes = (IsAuthenticated, IsAdminUser)
+
+    @swagger_auto_schema(
+        operation_description="Create Employee.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'password', 'first_name', 'last_name', 'birthdate'],
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING),
+                'password': openapi.Schema(type=openapi.TYPE_STRING),
+                'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                'birthdate': openapi.Schema(type=openapi.TYPE_STRING)
+            },
+        ),
+        security=[]
+    )
     def post(self, request):
-        """
-        Create Employee.
-        """
         serializer = EmployeeSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user, created = User.objects.get_or_create(username=serializer.data['username'])
@@ -36,10 +53,22 @@ class EmployeeViewAPI(APIView):  #genericview
             else:
                 return Response({"error": "This username: '{}' already used".format(serializer.data['username'])}, status=409)
 
+    @swagger_auto_schema(
+        operation_description="Update Employee.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'password', 'first_name', 'last_name', 'birthdate'],
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING),
+                'password': openapi.Schema(type=openapi.TYPE_STRING),
+                'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                'birthdate': openapi.Schema(type=openapi.TYPE_STRING)
+            },
+        ),
+        security=[]
+    )
     def put(self, request):
-        """
-        Update employee data.
-        """
         serializer = EmployeeSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user = get_object_or_404(User, username=serializer.data['username'])
@@ -52,53 +81,18 @@ class EmployeeViewAPI(APIView):  #genericview
                 employee.save()
                 return Response({"success": "Employee '{}' updated successfully".format(employee)})
 
+    @swagger_auto_schema(
+        operation_description="Delete Employee.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username'],
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING),
+            },
+        ),
+        security=[]
+    )
     def delete(self, request):
-        """
-        Delete employee data.
-        """
-        data = request.data.get('employee')
-        user = get_object_or_404(User, username=data['username'])
+        user = get_object_or_404(User, username=request.data['username'])
         user.delete()
-        return Response({"message": "Employee with username `{}` has been deleted.".format(data['username'])}, status=204)
-
-#
-# class DepartmentViewAPI(APIView):
-#     permission_classes = (IsAuthenticated, IsAdminUser)
-#
-#     def get(self, request):
-#         """
-#         Return a list of Departments.
-#         """
-#         queryset = Department.objects.all()
-#         serializer = DepartmentSerializer(queryset, many=True)
-#         return Response({"departmets": serializer.data})
-#
-#     def post(self, request):
-#         """
-#         Create Employee.
-#         """
-#         department = request.data.get("department")
-#         serializer = DepartmentSerializer(data=department)
-#         if serializer.is_valid(raise_exception=True):
-#             department_saved = serializer.save()
-#             return Response({"success": "Department '{}' created successfully".format(department_saved.name)})
-#
-#     def put(self, request):
-#         """
-#         Update employee data.
-#         """
-#         data = request.data.get('department')
-#         department = get_object_or_404(Department, username=data['name'])
-#         serializer = EmployeeSerializer(instance=department, data=data, partial=True)
-#         if serializer.is_valid(raise_exception=True):
-#             department_saved = serializer.save()
-#         return Response({"success": "Employee '{}' updated successfully".format(department_saved.user.username)})
-#
-#     def delete(self, request):
-#         """
-#         Delete employee data.
-#         """
-#         data = request.data.get('department')
-#         user = get_object_or_404(User, username=data['name'])
-#         user.delete()
-#         return Response({"message": "Department with name `{}` has been deleted.".format(data['username'])}, status=204)
+        return Response({"message": "Employee with username `{}` has been deleted.".format(request.data['username'])}, status=204)

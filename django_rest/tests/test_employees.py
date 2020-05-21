@@ -33,6 +33,16 @@ def test_create_employee_success(admin_client):
 
 
 @pytest.mark.django_db
+def test_create_employee_user_already_used(admin_client):
+
+    body = {'username': 'vololo122', 'password': 'gavanava', 'first_name': 'dddd',
+            'last_name': 'Kaddddvanchich', 'birthdate': '1979-12-05'}
+
+    resp = admin_client.post(path=reverse('employee'), data=body, format='json')
+    assert resp.status_code == 409
+
+
+@pytest.mark.django_db
 def test_create_employee_not_valid_data(admin_client):
     # bad birthadate data
 

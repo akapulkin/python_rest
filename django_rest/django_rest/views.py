@@ -1,6 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import APIException, status
 from django_rest.models import Employee
 from django.contrib.auth.models import User
 from django_rest.serializers import EmployeeSerializer
@@ -28,18 +29,18 @@ class EmployeesViewAPI(APIView):
         security=[]
     )
     def post(self, request):
-        serializer = EmployeeSerializer(data=request.data)
+        serializer = EmployeeSerializer(request.data)
         if serializer.is_valid(raise_exception=True):
             user, created = User.objects.get_or_create(username=serializer.data['username'])
             if created:
                 user.password = make_password(serializer.data['password'])
                 user.first_name = serializer.data['first_name']
                 user.last_name = serializer.data['last_name']
-                employee = Employee.objects.create(user=user,
-                                                   birthdate=serializer.data['birthdate']).save()
-                return Response({'success': 'Employee {} created successfully'.format(employee)},
-                                status=200)
+                employee = Employee.objects.create(
+                    user=user,
+                    birthdate=serializer.data['birthdate']
+                )
+                return Response(EmployeeSerializer(employee), status=200)
             else:
-                return Response({'error': 'This username: {} already used'.
-                                format(serializer.data['username'])},
-                                status=409)
+                message = 'User with username {} already used'.format(serializer.data['username'])
+                raise APIException(detail=message, code=status.HTTP_409_CONFLICT)

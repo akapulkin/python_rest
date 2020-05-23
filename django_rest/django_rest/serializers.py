@@ -9,12 +9,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['username', 'first_name', 'last_name', 'email']
 
 
-class EmployeeGetSerializer(serializers.ModelSerializer):
+class EmployeeModelSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 
     class Meta:
         model = Employee
-        fields = ['user', 'birthdate']
+        fields = ['id', 'user', 'birthdate']
 
 
 class EmployeeSerializer(serializers.Serializer):

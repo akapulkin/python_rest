@@ -4,10 +4,16 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import APIException, status
 from django_rest.models import Employee
 from django.contrib.auth.models import User
-from django_rest.serializers import EmployeeSerializer
+from django_rest.serializers import EmployeeSerializer, EmployeeModelSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+
+
+class ObjectExistsException(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = 'Object already exists.'
+    default_code = 'object_exists'
 
 
 class EmployeesViewAPI(APIView):
@@ -29,7 +35,7 @@ class EmployeesViewAPI(APIView):
         security=[]
     )
     def post(self, request):
-        serializer = EmployeeSerializer(request.data)
+        serializer = EmployeeSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             user, created = User.objects.get_or_create(username=serializer.data['username'])
             if created:
@@ -40,7 +46,9 @@ class EmployeesViewAPI(APIView):
                     user=user,
                     birthdate=serializer.data['birthdate']
                 )
-                return Response(EmployeeSerializer(employee), status=200)
+                employee_data = EmployeeModelSerializer(employee)
+                # employee_data.is_valid()
+                return Response(data=employee_data.data, status=200)
             else:
                 message = 'User with username {} already used'.format(serializer.data['username'])
-                raise APIException(detail=message, code=status.HTTP_409_CONFLICT)
+                raise ObjectExistsException(message)

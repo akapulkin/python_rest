@@ -1,7 +1,8 @@
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import APIException, status
+from rest_framework.exceptions import APIException, status, PermissionDenied
 from django_rest.models import Employee
 from django.contrib.auth.models import User
 from django_rest.serializers import EmployeeSerializer, EmployeeModelSerializer
@@ -14,6 +15,21 @@ class ObjectExistsException(APIException):
     status_code = status.HTTP_409_CONFLICT
     default_detail = 'Object already exists.'
     default_code = 'object_exists'
+
+
+class EmployeeDirectViewAPI(APIView):
+
+    @swagger_auto_schema(operation_description='Get Employee.',
+                         responses={200: EmployeeModelSerializer()})
+    def get(self, request, pk):
+
+        employee = get_object_or_404(Employee, pk=pk)
+        serializer = EmployeeModelSerializer(employee)
+        # TODO move to permission class
+        if request.user.is_staff or request.user.username == serializer.data['username']:
+            return Response(serializer.data)
+        else:
+            raise PermissionDenied
 
 
 class EmployeesViewAPI(APIView):

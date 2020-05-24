@@ -17,7 +17,7 @@ class ObjectExistsException(APIException):
     default_code = 'object_exists'
 
 
-class EmployeeDirectViewAPI(APIView):
+class EmployeeAPIView(APIView):
 
     @swagger_auto_schema(operation_description='Get Employee.',
                          responses={200: EmployeeModelSerializer()})
@@ -26,13 +26,12 @@ class EmployeeDirectViewAPI(APIView):
         employee = get_object_or_404(Employee, pk=pk)
         serializer = EmployeeModelSerializer(employee)
         # TODO move to permission class
-        if request.user.is_staff or request.user.username == serializer.data['username']:
-            return Response(serializer.data)
-        else:
+        if not request.user.is_admin or request.user != employee.user:
             raise PermissionDenied
+        return Response(serializer.data)
 
 
-class EmployeesViewAPI(APIView):
+class EmployeesCreateAPIView(APIView):
     permission_classes = (IsAuthenticated, IsAdminUser)
 
     @swagger_auto_schema(
@@ -47,8 +46,7 @@ class EmployeesViewAPI(APIView):
                 'last_name': openapi.Schema(type=openapi.TYPE_STRING),
                 'birthdate': openapi.Schema(type=openapi.TYPE_STRING)
             },
-        ),
-        security=[]
+        )
     )
     def post(self, request):
         serializer = EmployeeSerializer(data=request.data)
@@ -63,7 +61,6 @@ class EmployeesViewAPI(APIView):
                     birthdate=serializer.data['birthdate']
                 )
                 employee_data = EmployeeModelSerializer(employee)
-                # employee_data.is_valid()
                 return Response(data=employee_data.data, status=200)
             else:
                 message = 'User with username {} already used'.format(serializer.data['username'])

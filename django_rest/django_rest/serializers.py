@@ -27,4 +27,3 @@ class EmployeeSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=32)
     last_name = serializers.CharField(max_length=32)
     birthdate = serializers.DateField()
-

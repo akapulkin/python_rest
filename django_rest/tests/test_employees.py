@@ -10,12 +10,12 @@ from rest_framework.test import APIClient
 PASSWORD = 'PASSWORD'
 
 
-def get_employee(is_admin=False):
+def get_employee(is_staff=False):
     data = {'username': str(uuid4()), 'password': PASSWORD, 'first_name': 'test_name',
                  'last_name': 'test_name', 'birthdate': '1988-12-12'}
     user = User.objects.create_user(
         username=data['username'], password=PASSWORD,
-        is_active=True, is_superuser=is_admin)
+        is_active=True, is_staff=is_staff, is_superuser=is_staff)
     employee = Employee.objects.create(user=user, birthdate=data['birthdate'])
     return employee, data
 
@@ -39,7 +39,7 @@ def client():
 
 @pytest.fixture
 def admin_client():
-    employee, _ = get_employee(is_admin=True)
+    employee, _ = get_employee(is_staff=True)
     api_client = get_client(employee)
     return api_client
 
@@ -102,7 +102,7 @@ def test_get_employee_success(admin_client):
     url = reverse('employee', args=(employee.id,))
     resp = admin_client.get(path=url)
 
-    assert resp.status_code == 200
+    assert 200 == resp.status_code
 
 
 @pytest.mark.django_db

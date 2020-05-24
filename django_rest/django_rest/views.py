@@ -26,9 +26,11 @@ class EmployeeAPIView(APIView):
         employee = get_object_or_404(Employee, pk=pk)
         serializer = EmployeeModelSerializer(employee)
         # TODO move to permission class
-        if not request.user.is_admin or request.user != employee.user:
+        if request.user.is_staff or request.user == employee.user:
+            return Response(serializer.data)
+        else:
             raise PermissionDenied
-        return Response(serializer.data)
+
 
 
 class EmployeesCreateAPIView(APIView):

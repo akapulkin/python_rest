@@ -10,18 +10,20 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class EmployeeModelSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
 
     class Meta:
         model = Employee
-        fields = ['id', 'user', 'birthdate']
+        fields = ['id', 'username', 'first_name', 'last_name', 'birthdate']
+
+    username = serializers.CharField(source='user.username')
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
 
 
 class EmployeeSerializer(serializers.Serializer):
 
-    username = serializers.CharField(required=True, max_length=32)
+    username = serializers.CharField(required=True, max_length=150)
     password = serializers.CharField(required=True, max_length=32)
     first_name = serializers.CharField(max_length=32)
     last_name = serializers.CharField(max_length=32)
     birthdate = serializers.DateField()
-

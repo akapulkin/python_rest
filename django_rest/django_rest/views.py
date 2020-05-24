@@ -1,7 +1,8 @@
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import APIException, status
+from rest_framework.exceptions import APIException, status, PermissionDenied
 from django_rest.models import Employee
 from django.contrib.auth.models import User
 from django_rest.serializers import EmployeeSerializer, EmployeeModelSerializer
@@ -16,7 +17,23 @@ class ObjectExistsException(APIException):
     default_code = 'object_exists'
 
 
-class EmployeesViewAPI(APIView):
+class EmployeeAPIView(APIView):
+
+    @swagger_auto_schema(operation_description='Get Employee.',
+                         responses={200: EmployeeModelSerializer()})
+    def get(self, request, pk):
+
+        employee = get_object_or_404(Employee, pk=pk)
+        serializer = EmployeeModelSerializer(employee)
+        # TODO move to permission class
+        if request.user.is_staff or request.user == employee.user:
+            return Response(serializer.data)
+        else:
+            raise PermissionDenied
+
+
+
+class EmployeesCreateAPIView(APIView):
     permission_classes = (IsAuthenticated, IsAdminUser)
 
     @swagger_auto_schema(
@@ -31,8 +48,7 @@ class EmployeesViewAPI(APIView):
                 'last_name': openapi.Schema(type=openapi.TYPE_STRING),
                 'birthdate': openapi.Schema(type=openapi.TYPE_STRING)
             },
-        ),
-        security=[]
+        )
     )
     def post(self, request):
         serializer = EmployeeSerializer(data=request.data)
@@ -47,7 +63,6 @@ class EmployeesViewAPI(APIView):
                     birthdate=serializer.data['birthdate']
                 )
                 employee_data = EmployeeModelSerializer(employee)
-                # employee_data.is_valid()
                 return Response(data=employee_data.data, status=200)
             else:
                 message = 'User with username {} already used'.format(serializer.data['username'])

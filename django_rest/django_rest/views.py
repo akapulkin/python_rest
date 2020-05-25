@@ -17,6 +17,24 @@ class ObjectExistsException(APIException):
     default_code = 'object_exists'
 
 
+def employee_update(employee, request_data):
+    employee.user.username = request_data.get('username', employee.user.username)
+    employee.user.password = request_data.get('password', employee.user.password)
+    employee.user.first_name = request_data.get('first_name', employee.user.first_name)
+    employee.user.last_name = request_data.get('last_name', employee.user.last_name)
+    employee.birthdate = request_data.get('birthdate', employee.birthdate)
+    employee.save()
+    return employee
+
+
+def permission_check(request, employee):
+    # TODO move to permission class
+    if request.user.is_staff or request.user == employee.user:
+        return True
+    else:
+        raise PermissionDenied
+
+
 class EmployeeAPIView(APIView):
 
     @swagger_auto_schema(operation_description='Get Employee.',
@@ -25,12 +43,54 @@ class EmployeeAPIView(APIView):
 
         employee = get_object_or_404(Employee, pk=pk)
         serializer = EmployeeModelSerializer(employee)
-        # TODO move to permission class
-        if request.user.is_staff or request.user == employee.user:
+        if permission_check(request, employee):
             return Response(serializer.data)
-        else:
-            raise PermissionDenied
 
+    @swagger_auto_schema(
+        operation_description="Update Employee.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'password', 'first_name', 'last_name', 'birthdate'],
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING),
+                'password': openapi.Schema(type=openapi.TYPE_STRING),
+                'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                'birthdate': openapi.Schema(type=openapi.TYPE_STRING)
+            },
+        )
+    )
+    def put(self, request, pk):
+        serializer = EmployeeSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            employee = get_object_or_404(Employee, pk=pk)
+            if employee:
+                employee = employee_update(employee, serializer.data)
+                employee_data = EmployeeModelSerializer(employee)
+                if permission_check(request, employee):
+                    return Response(employee_data.data)
+
+    @swagger_auto_schema(
+        operation_description="Partial update Employee.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING),
+                'password': openapi.Schema(type=openapi.TYPE_STRING),
+                'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                'birthdate': openapi.Schema(type=openapi.TYPE_STRING)
+            },
+        )
+    )
+    def patch(self, request, pk):
+        employee = get_object_or_404(Employee, pk=pk)
+        serializer = EmployeeModelSerializer(employee, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            employee = employee_update(employee, serializer.initial_data)
+            employee_data = EmployeeModelSerializer(employee)
+            if permission_check(request, employee):
+                return Response(employee_data.data)
 
 
 class EmployeesCreateAPIView(APIView):

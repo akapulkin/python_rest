@@ -14,8 +14,8 @@ def get_employee(is_staff=False):
     data = {'username': str(uuid4()), 'password': PASSWORD, 'first_name': 'test_name',
                  'last_name': 'test_name', 'birthdate': '1988-12-12'}
     user = User.objects.create_user(
-        username=data['username'], password=PASSWORD,
-        is_active=True, is_staff=is_staff, is_superuser=is_staff)
+        username=data['username'], password=PASSWORD, first_name=data['first_name'],
+        last_name=data['last_name'], is_active=True, is_staff=is_staff, is_superuser=is_staff)
     employee = Employee.objects.create(user=user, birthdate=data['birthdate'])
     return employee, data
 
@@ -42,6 +42,9 @@ def admin_client():
     employee, _ = get_employee(is_staff=True)
     api_client = get_client(employee)
     return api_client
+
+
+# POST_TESTS #######################################
 
 
 @pytest.mark.django_db
@@ -96,6 +99,9 @@ def test_create_employee_unauthorized():
     assert resp.status_code == 403
 
 
+# GET_TESTS #######################################
+
+
 @pytest.mark.django_db
 def test_get_employee_success(admin_client):
     employee, _ = get_employee()
@@ -139,5 +145,140 @@ def test_get_employee_unauthorized():
     employee, _ = get_employee()
     url = reverse('employee', args=(employee.id,))
     resp = client.get(path=url)
+
+    assert resp.status_code == 403
+
+
+# PUT_TESTS #######################################
+
+
+@pytest.mark.django_db
+def test_put_employee_success(admin_client):
+    employee, body = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    body['username'] = 'gadjikkk'
+    body['last_name'] = 'Vagrant'
+    resp = admin_client.put(url, data=body, format='json')
+
+    assert resp.status_code == 200
+    assert resp.data['username'] == body['username']
+
+
+@pytest.mark.django_db
+def test_put_employee_not_valid(admin_client):
+    employee, body = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    body['birthdate'] = 'STRING'
+    resp = admin_client.put(url, data=body, format='json')
+
+    assert resp.status_code == 400
+
+
+@pytest.mark.django_db
+def test_put_employee_no_permissions(client):
+    employee, body = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    body['username'] = 'gadjikkk'
+    body['last_name'] = 'Vagrant'
+    resp = client.put(url, data=body, format='json')
+
+    assert resp.status_code == 403
+
+
+@pytest.mark.django_db
+def test_put_employee_owner_success():
+    employee, body = get_employee()
+    client = get_client(employee)
+    url = reverse('employee', args=(employee.id,))
+    body['username'] = 'gadjikkk'
+    body['last_name'] = 'Vagrant'
+    resp = client.put(url, data=body, format='json')
+
+    assert resp.status_code == 200
+
+
+@pytest.mark.django_db
+def test_put_employee_object_does_not_exist(admin_client):
+    employee_not_exist_pk = 999
+    employee, body = get_employee()
+    url = reverse('employee', args=(employee_not_exist_pk,))
+    resp = admin_client.put(url, data=body, format='json')
+
+    assert resp.status_code == 404
+
+
+@pytest.mark.django_db
+def test_put_employee_unauthorized():
+    client = APIClient()
+    employee, body = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    body['username'] = 'gadjikkk'
+    body['last_name'] = 'Vagrant'
+    resp = client.put(url, data=body, format='json')
+
+    assert resp.status_code == 403
+
+
+# PATCH_TESTS #######################################
+
+PATCH_BODY = {'last_name': 'Himichkovich',
+              'birthdate': '1979-12-05'}
+
+
+@pytest.mark.django_db
+def test_patch_employee_success(admin_client):
+    employee, _ = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    resp = admin_client.patch(url, data=PATCH_BODY, format='json')
+
+    assert resp.status_code == 200
+    assert resp.data['last_name'] == PATCH_BODY['last_name']
+
+
+@pytest.mark.django_db
+def test_patch_employee_not_valid(admin_client):
+    employee, _ = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    not_valid_body = {'birthdate': 'STRING'}
+    resp = admin_client.patch(url, data=not_valid_body, format='json')
+
+    assert resp.status_code == 400
+
+
+@pytest.mark.django_db
+def test_patch_employee_no_permissions(client):
+    employee, _ = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    resp = client.patch(url, data=PATCH_BODY, format='json')
+
+    assert resp.status_code == 403
+
+
+@pytest.mark.django_db
+def test_patch_employee_owner_success():
+    employee, _ = get_employee()
+    client = get_client(employee)
+    url = reverse('employee', args=(employee.id,))
+    resp = client.patch(url, data=PATCH_BODY, format='json')
+
+    assert resp.status_code == 200
+
+
+@pytest.mark.django_db
+def test_patch_employee_object_does_not_exist(admin_client):
+    employee_not_exist_pk = 999
+    employee, _ = get_employee()
+    url = reverse('employee', args=(employee_not_exist_pk,))
+    resp = admin_client.patch(url, data=PATCH_BODY, format='json')
+
+    assert resp.status_code == 404
+
+
+@pytest.mark.django_db
+def test_patch_employee_unauthorized():
+    client = APIClient()
+    employee, _ = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    resp = client.patch(url, data=PATCH_BODY, format='json')
 
     assert resp.status_code == 403

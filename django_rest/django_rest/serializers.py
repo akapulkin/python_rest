@@ -22,8 +22,8 @@ class EmployeeModelSerializer(serializers.ModelSerializer):
 
 class EmployeeSerializer(serializers.Serializer):
 
-    username = serializers.CharField(required=True, max_length=150)
-    password = serializers.CharField(required=True, max_length=32)
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(max_length=32)
     first_name = serializers.CharField(max_length=32)
     last_name = serializers.CharField(max_length=32)
     birthdate = serializers.DateField()

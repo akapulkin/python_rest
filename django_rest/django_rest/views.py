@@ -17,62 +17,74 @@ class ObjectExistsException(APIException):
     default_code = 'object_exists'
 
 
-def employee_update(employee, request_data):
-    employee.user.username = request_data.get('username', employee.user.username)
-    employee.user.password = request_data.get('password', employee.user.password)
-    employee.user.first_name = request_data.get('first_name', employee.user.first_name)
-    employee.user.last_name = request_data.get('last_name', employee.user.last_name)
-    employee.birthdate = request_data.get('birthdate', employee.birthdate)
-    employee.save()
-
-
-def permission_check(request, employee):
-    # TODO move to permission class
-    if not request.user.is_staff and request.user != employee.user:
-        raise PermissionDenied
-
-
 class EmployeeAPIView(APIView):
 
     @swagger_auto_schema(operation_description='Get Employee.',
                          responses={200: EmployeeModelSerializer()})
     def get(self, request, pk):
         employee = get_object_or_404(Employee, pk=pk)
+        self.permission_check(request, employee)
         serializer = EmployeeModelSerializer(employee)
-        permission_check(request, employee)
         return Response(serializer.data)
 
     @swagger_auto_schema(
+        # TODO: add responses
         operation_description="Update Employee.",
         request_body=employee_swager.put_schema
     )
     def put(self, request, pk):
         serializer = EmployeeSerializer(data=request.data)
+        self.permission_check(request, employee)
         if serializer.is_valid(raise_exception=True):
             employee = get_object_or_404(Employee, pk=pk)
-            employee_update(employee, serializer.data)
+            self.employee_update(employee, serializer.data)
             employee_data = EmployeeModelSerializer(employee)
-            permission_check(request, employee)
             return Response(employee_data.data)
 
     @swagger_auto_schema(
+        # TODO: add responses
         operation_description='Partial update Employee.',
         request_body=employee_swager.patch_schema
     )
     def patch(self, request, pk):
         employee = get_object_or_404(Employee, pk=pk)
+        self.permission_check(request, employee)
         serializer = EmployeeModelSerializer(employee, data=request.data, partial=True)
         if serializer.is_valid(raise_exception=True):
-            employee_update(employee, serializer.initial_data)
+            self.employee_update(employee, serializer.initial_data)
             employee_data = EmployeeModelSerializer(employee)
-            permission_check(request, employee)
             return Response(employee_data.data)
+
+    @swagger_auto_schema(operation_description='Delete Employee.',
+                         responses={204: EmployeeModelSerializer()})
+    def delete(self, request, pk):
+        employee = get_object_or_404(Employee, pk=pk)
+        self.permission_check(request, employee)
+        serializer = EmployeeModelSerializer(employee)
+        employee.delete()
+        return Response(serializer.data, status=204)
+
+    @staticmethod
+    def employee_update(employee, request_data):
+        employee.user.username = request_data.get('username', employee.user.username)
+        employee.user.password = request_data.get('password', employee.user.password)
+        employee.user.first_name = request_data.get('first_name', employee.user.first_name)
+        employee.user.last_name = request_data.get('last_name', employee.user.last_name)
+        employee.birthdate = request_data.get('birthdate', employee.birthdate)
+        employee.save()
+
+    @staticmethod
+    def permission_check(request, employee):
+        # TODO move to permission class
+        if not request.user.is_staff and request.user != employee.user:
+            raise PermissionDenied
 
 
 class EmployeesCreateAPIView(APIView):
     permission_classes = (IsAuthenticated, IsAdminUser)
 
     @swagger_auto_schema(
+        # TODO: add responses
         operation_description='Create Employee.',
         request_body=employee_swager.post_schema
     )

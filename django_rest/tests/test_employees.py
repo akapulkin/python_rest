@@ -294,7 +294,7 @@ def test_delete_employee_success(admin_client):
 
     assert 204 == resp.status_code
 
-
+# TODO: owner no permissions
 @pytest.mark.django_db
 def test_delete_employee_no_permissions(client):
     employee, _ = get_employee()

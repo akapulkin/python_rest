@@ -281,3 +281,53 @@ def test_patch_employee_unauthorized():
     resp = client.patch(url, data=patch_body, format='json')
 
     assert resp.status_code == 403
+
+
+# DELETE_TESTS #######################################
+
+
+@pytest.mark.django_db
+def test_delete_employee_success(admin_client):
+    employee, _ = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    resp = admin_client.delete(path=url)
+
+    assert 204 == resp.status_code
+
+
+@pytest.mark.django_db
+def test_delete_employee_no_permissions(client):
+    employee, _ = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    resp = client.delete(path=url)
+
+    assert resp.status_code == 403
+
+
+@pytest.mark.django_db
+def test_delete_employee_owner_success():
+    employee, _ = get_employee()
+    client = get_client(employee)
+    url = reverse('employee', args=(employee.id,))
+    resp = client.delete(path=url)
+
+    assert resp.status_code == 204
+
+
+@pytest.mark.django_db
+def test_delete_employee_object_does_not_exist(admin_client):
+    employee_not_exist_pk = 999
+    url = reverse('employee', args=(employee_not_exist_pk,))
+    resp = admin_client.delete(path=url)
+
+    assert resp.status_code == 404
+
+
+@pytest.mark.django_db
+def test_delete_employee_unauthorized():
+    client = APIClient()
+    employee, _ = get_employee()
+    url = reverse('employee', args=(employee.id,))
+    resp = client.delete(path=url)
+
+    assert resp.status_code == 403

@@ -68,6 +68,15 @@ class EmployeeAPIView(APIView):
             permission_check(request, employee)
             return Response(employee_data.data)
 
+    @swagger_auto_schema(operation_description='Delete Employee.',
+                         responses={204: EmployeeModelSerializer()})
+    def delete(self, request, pk):
+        employee = get_object_or_404(Employee, pk=pk)
+        serializer = EmployeeModelSerializer(employee)
+        permission_check(request, employee)
+        employee.delete()
+        return Response(serializer.data, status=204)
+
 
 class EmployeesCreateAPIView(APIView):
     permission_classes = (IsAuthenticated, IsAdminUser)

@@ -24,7 +24,6 @@ def employee_update(employee, request_data):
     employee.user.last_name = request_data.get('last_name', employee.user.last_name)
     employee.birthdate = request_data.get('birthdate', employee.birthdate)
     employee.save()
-    return employee
 
 
 def permission_check(request, employee):
@@ -45,7 +44,7 @@ class EmployeeAPIView(APIView):
 
     @swagger_auto_schema(
         operation_description="Update Employee.",
-        request_body=employee_swager.put_post_schema
+        request_body=employee_swager.put_schema
     )
     def put(self, request, pk):
         serializer = EmployeeSerializer(data=request.data)
@@ -57,7 +56,7 @@ class EmployeeAPIView(APIView):
             return Response(employee_data.data)
 
     @swagger_auto_schema(
-        operation_description="Partial update Employee.",
+        operation_description='Partial update Employee.',
         request_body=employee_swager.patch_schema
     )
     def patch(self, request, pk):
@@ -75,7 +74,7 @@ class EmployeesCreateAPIView(APIView):
 
     @swagger_auto_schema(
         operation_description='Create Employee.',
-        request_body=employee_swager.put_post_schema
+        request_body=employee_swager.post_schema
     )
     def post(self, request):
         serializer = EmployeeSerializer(data=request.data)

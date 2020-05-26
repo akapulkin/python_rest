@@ -1,7 +1,7 @@
 from drf_yasg import openapi
 
 
-put_post_schema = openapi.Schema(
+put_schema = openapi.Schema(
             type=openapi.TYPE_OBJECT,
             required=['username', 'password', 'first_name', 'last_name', 'birthdate'],
             properties={
@@ -12,6 +12,8 @@ put_post_schema = openapi.Schema(
                 'birthdate': openapi.Schema(type=openapi.TYPE_STRING)
             },
         )
+
+post_schema = put_schema
 
 patch_schema = openapi.Schema(
             type=openapi.TYPE_OBJECT,

@@ -85,6 +85,7 @@ celerybeat-schedule
 # virtualenv
 .venv
 venv/
+venv_2/
 ENV/
 
 # Spyder project settings
@@ -104,3 +105,5 @@ ENV/
 
 static_root/
 .DS_Store
+
+*.sqlite3

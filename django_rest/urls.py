@@ -54,7 +54,9 @@ urlpatterns = [
 
     # Employees
     path('employee/', views.EmployeesCreateAPIView.as_view(), name='employee_create'),
-    path('employee/<int:pk>/', views.EmployeeAPIView.as_view(), name='employee')
+    path('employee/<int:pk>/', views.EmployeeAPIView.as_view(), name='employee'),
 
     # Departments
+    path('department/', views.DepartmentCreateView.as_view(), name='department_create'),
+
 ]

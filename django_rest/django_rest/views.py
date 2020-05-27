@@ -1,11 +1,13 @@
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
+from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import APIException, status, PermissionDenied
-from django_rest.models import Employee
+from django_rest.models import Employee, Department
 from django.contrib.auth.models import User
-from django_rest.serializers import EmployeeSerializer, EmployeeModelSerializer
+from django_rest.serializers import EmployeeSerializer, EmployeeModelSerializer,\
+    DepartmentSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from drf_yasg.utils import swagger_auto_schema
 from swagger import employee_swager
@@ -28,23 +30,23 @@ class EmployeeAPIView(APIView):
         return Response(serializer.data)
 
     @swagger_auto_schema(
-        # TODO: add responses
         operation_description="Update Employee.",
-        request_body=employee_swager.put_schema
+        request_body=employee_swager.put_schema,
+        responses={203: EmployeeModelSerializer()}
     )
     def put(self, request, pk):
-        serializer = EmployeeSerializer(data=request.data)
+        employee = get_object_or_404(Employee, pk=pk)
         self.permission_check(request, employee)
+        serializer = EmployeeSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            employee = get_object_or_404(Employee, pk=pk)
             self.employee_update(employee, serializer.data)
             employee_data = EmployeeModelSerializer(employee)
             return Response(employee_data.data)
 
     @swagger_auto_schema(
-        # TODO: add responses
         operation_description='Partial update Employee.',
-        request_body=employee_swager.patch_schema
+        request_body=employee_swager.patch_schema,
+        responses={200: EmployeeModelSerializer()}
     )
     def patch(self, request, pk):
         employee = get_object_or_404(Employee, pk=pk)
@@ -59,7 +61,7 @@ class EmployeeAPIView(APIView):
                          responses={204: EmployeeModelSerializer()})
     def delete(self, request, pk):
         employee = get_object_or_404(Employee, pk=pk)
-        self.permission_check(request, employee)
+        self.delete_permission_check(request, employee)
         serializer = EmployeeModelSerializer(employee)
         employee.delete()
         return Response(serializer.data, status=204)
@@ -67,7 +69,11 @@ class EmployeeAPIView(APIView):
     @staticmethod
     def employee_update(employee, request_data):
         employee.user.username = request_data.get('username', employee.user.username)
-        employee.user.password = request_data.get('password', employee.user.password)
+        password = request_data.get('password')
+        if password:
+            employee.user.password = make_password(password)
+        else:
+            employee.user.password = employee.user.password
         employee.user.first_name = request_data.get('first_name', employee.user.first_name)
         employee.user.last_name = request_data.get('last_name', employee.user.last_name)
         employee.birthdate = request_data.get('birthdate', employee.birthdate)
@@ -79,14 +85,20 @@ class EmployeeAPIView(APIView):
         if not request.user.is_staff and request.user != employee.user:
             raise PermissionDenied
 
+    @staticmethod
+    def delete_permission_check(request, employee):
+        # TODO move to permission class
+        if not request.user.is_staff or request.user == employee.user:
+            raise PermissionDenied
+
 
 class EmployeesCreateAPIView(APIView):
     permission_classes = (IsAuthenticated, IsAdminUser)
 
     @swagger_auto_schema(
-        # TODO: add responses
         operation_description='Create Employee.',
-        request_body=employee_swager.post_schema
+        request_body=employee_swager.post_schema,
+        responses={203: EmployeeModelSerializer()}
     )
     def post(self, request):
         serializer = EmployeeSerializer(data=request.data)
@@ -105,3 +117,8 @@ class EmployeesCreateAPIView(APIView):
             else:
                 message = 'User with username {} already used'.format(serializer.data['username'])
                 raise ObjectExistsException(message)
+
+
+class DepartmentCreateView(CreateAPIView):
+    serializer_class = DepartmentSerializer
+    queryset = Department.objects.all()

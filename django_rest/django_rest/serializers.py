@@ -7,21 +7,23 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Department
-        fields = ['id', 'head_of_department', 'name']
+        fields = ('id', 'head_of_department', 'name')
+        read_only_fields = ('id',)
 
 
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email']
+        fields = ('username', 'first_name', 'last_name', 'email')
 
 
 class EmployeeModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        fields = ['id', 'username', 'first_name', 'last_name', 'birthdate', 'department']
+        fields = ('id', 'username', 'first_name', 'last_name', 'birthdate', 'department')
+        read_only_fields = ('id',)
 
     username = serializers.CharField(source='user.username')
     first_name = serializers.CharField(source='user.first_name')

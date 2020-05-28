@@ -58,7 +58,7 @@ def test_create_employee_success(admin_client):
 
     resp = admin_client.post(url, data=body, format='json')
     
-    assert resp.status_code == 200
+    assert resp.status_code == 201
     assert resp.data['username'] == body['username']
     assert Employee.objects.filter(id=resp.data['id']).count()
 

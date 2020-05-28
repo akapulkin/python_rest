@@ -12,7 +12,7 @@ PASSWORD = 'PASSWORD'
 
 def get_employee(is_staff=False):
     data = {'username': str(uuid4()), 'password': PASSWORD, 'first_name': 'test_name',
-                 'last_name': 'test_name', 'birthdate': '1988-12-12'}
+            'last_name': 'test_name', 'birthdate': '1988-12-12'}
     user = User.objects.create_user(
         username=data['username'], password=PASSWORD, first_name=data['first_name'],
         last_name=data['last_name'], is_active=True, is_staff=is_staff, is_superuser=is_staff)
@@ -294,7 +294,7 @@ def test_delete_employee_success(admin_client):
 
     assert 204 == resp.status_code
 
-# TODO: owner no permissions
+
 @pytest.mark.django_db
 def test_delete_employee_no_permissions(client):
     employee, _ = get_employee()
@@ -311,7 +311,7 @@ def test_delete_employee_owner_success():
     url = reverse('employee', args=(employee.id,))
     resp = client.delete(path=url)
 
-    assert resp.status_code == 204
+    assert resp.status_code == 403
 
 
 @pytest.mark.django_db

@@ -32,7 +32,7 @@ class EmployeeAPIView(APIView):
     @swagger_auto_schema(
         operation_description="Update Employee.",
         request_body=employee_swager.put_schema,
-        responses={203: EmployeeModelSerializer()}
+        responses={200: EmployeeModelSerializer()}
     )
     def put(self, request, pk):
         employee = get_object_or_404(Employee, pk=pk)
@@ -113,7 +113,7 @@ class EmployeesCreateAPIView(APIView):
                     birthdate=serializer.data['birthdate']
                 )
                 employee_data = EmployeeModelSerializer(employee)
-                return Response(data=employee_data.data, status=200)
+                return Response(data=employee_data.data, status=201)
             else:
                 message = 'User with username {} already used'.format(serializer.data['username'])
                 raise ObjectExistsException(message)

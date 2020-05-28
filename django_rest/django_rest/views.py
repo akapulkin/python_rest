@@ -1,6 +1,6 @@
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import APIException, status, PermissionDenied
@@ -98,7 +98,7 @@ class EmployeesCreateAPIView(APIView):
     @swagger_auto_schema(
         operation_description='Create Employee.',
         request_body=employee_swager.post_schema,
-        responses={203: EmployeeModelSerializer()}
+        responses={201: EmployeeModelSerializer()}
     )
     def post(self, request):
         serializer = EmployeeSerializer(data=request.data)
@@ -120,5 +120,14 @@ class EmployeesCreateAPIView(APIView):
 
 
 class DepartmentCreateView(CreateAPIView):
+    permission_classes = (IsAuthenticated, IsAdminUser)
     serializer_class = DepartmentSerializer
     queryset = Department.objects.all()
+
+
+class DepartmentView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated, IsAdminUser)
+    serializer_class = DepartmentSerializer
+    queryset = Department.objects.all()
+
+

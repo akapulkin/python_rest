@@ -58,5 +58,6 @@ urlpatterns = [
 
     # Departments
     path('department/', views.DepartmentCreateView.as_view(), name='department_create'),
+    path('department/<int:pk>/', views.DepartmentView.as_view(), name='department'),
 
 ]

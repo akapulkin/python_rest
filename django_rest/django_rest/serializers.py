@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from django_rest.models import Employee, Department
+from django_rest.models import Employee, Department, Project, Task
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -38,3 +38,12 @@ class EmployeeSerializer(serializers.Serializer):
     last_name = serializers.CharField(max_length=32)
     birthdate = serializers.DateField()
     department = serializers.IntegerField(allow_null=True, required=False)
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Project
+        fields = ('id', 'project_manager', 'name', 'beginning_date', 'end_date')
+        read_only_fields = ('id',)
+

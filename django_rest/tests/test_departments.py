@@ -21,8 +21,6 @@ def get_department():
     data = {'name': 'Financial department'}
     employee, _ = get_employee()
     department = Department.objects.create(name=data['name'], head_of_department=employee)
-    employee.department = department
-    employee.save()
     return department, data
 
 

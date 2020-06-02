@@ -11,13 +11,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
 
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ('username', 'first_name', 'last_name', 'email')
-
-
 class EmployeeModelSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -44,6 +37,13 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ('id', 'project_manager', 'name', 'beginning_date', 'end_date')
-        read_only_fields = ('id',)
+        fields = ('id', 'project_manager', 'name', 'start_date', 'end_date')
+        read_only_fields = ('id', 'start_date', 'end_date')
 
+
+class TaskSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Task
+        fields = ('id', 'executor', 'name', 'project', 'start_date', 'end_date', 'status')
+        read_only_fields = ('id',)

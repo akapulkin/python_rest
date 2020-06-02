@@ -4,10 +4,10 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import APIException, status, PermissionDenied
-from django_rest.models import Employee, Department, Project
+from django_rest.models import Employee, Department, Project, Task
 from django.contrib.auth.models import User
 from django_rest.serializers import EmployeeSerializer, EmployeeModelSerializer,\
-    DepartmentSerializer, ProjectSerializer
+    DepartmentSerializer, ProjectSerializer, TaskSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from drf_yasg.utils import swagger_auto_schema
 from swagger import employee_swager
@@ -142,3 +142,14 @@ class ProjectAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
     queryset = Project.objects.all()
 
+
+class TaskCreateAPIView(CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = TaskSerializer
+    queryset = Task.objects.all()
+
+
+class TaskAPIView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = TaskSerializer
+    queryset = Task.objects.all()
